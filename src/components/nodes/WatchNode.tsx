@@ -35,19 +35,19 @@ export function WatchNode({ id, selected }: { id: string, selected?: boolean }) 
         data = ds.previewData;
       }
     } else {
-      headers = actualSourceNode.data.outputHeaders || [];
-      data = actualSourceNode.data.outputData || [];
+      headers = (actualSourceNode.data.outputHeaders || []) as string[];
+      data = (actualSourceNode.data.outputData || []) as any[][];
     }
   }
 
   return (
     <>
       <NodeResizer minWidth={200} minHeight={150} isVisible={selected} />
-      <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-lg w-full h-full flex flex-col overflow-hidden">
-        <Handle type="target" position={Position.Left} className="w-3 h-3 bg-orange-500 border-2 border-slate-800" />
-        <div className="bg-orange-900/50 p-2 border-b border-slate-700 flex items-center gap-2 shrink-0">
-          <Eye size={14} className="text-orange-400" />
-          <span className="text-xs font-semibold text-slate-200">Watch</span>
+      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg w-full h-full flex flex-col overflow-hidden">
+        <Handle type="target" position={Position.Left} className="w-3 h-3 bg-orange-500 border-2 border-white dark:border-slate-800" />
+        <div className="bg-orange-50 dark:bg-orange-900/50 p-2 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2 shrink-0">
+          <Eye size={14} className="text-orange-500 dark:text-orange-400" />
+          <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">Watch</span>
         </div>
         <div className="p-2 flex-1 overflow-hidden flex flex-col relative nodrag">
           {outputChartConfig && outputLibraryId ? (
@@ -56,29 +56,29 @@ export function WatchNode({ id, selected }: { id: string, selected?: boolean }) 
             </div>
           ) : headers.length > 0 ? (
             <div className="flex flex-col gap-1 h-full">
-              <div className="text-[10px] text-slate-400 mb-1 flex items-center gap-1 shrink-0">
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1 shrink-0">
                 <Table2 size={10} />
                 {data.length} rows, {headers.length} cols
               </div>
-              <div className="overflow-auto border border-slate-700 rounded flex-1 custom-scrollbar">
+              <div className="overflow-auto border border-slate-200 dark:border-slate-700 rounded flex-1 custom-scrollbar">
                 <table className="w-full text-left border-collapse text-[8px]">
-                  <thead className="bg-slate-900 sticky top-0">
+                  <thead className="bg-slate-50 dark:bg-slate-900 sticky top-0 text-slate-700 dark:text-slate-300">
                     <tr>
                       {headers.slice(0, 10).map((h: string, i: number) => (
-                        <th key={i} className="p-1 border-b border-r border-slate-700 truncate max-w-[100px]">{h}</th>
+                        <th key={i} className="p-1 border-b border-r border-slate-200 dark:border-slate-700 truncate max-w-[100px]">{h}</th>
                       ))}
-                      {headers.length > 10 && <th className="p-1 border-b border-slate-700">...</th>}
+                      {headers.length > 10 && <th className="p-1 border-b border-slate-200 dark:border-slate-700">...</th>}
                     </tr>
                   </thead>
                   <tbody>
                     {data.slice(0, 50).map((row: any[], rowIndex: number) => (
-                      <tr key={rowIndex} className="bg-slate-800">
+                      <tr key={rowIndex} className="bg-white dark:bg-slate-800">
                         {row.slice(0, 10).map((cell: any, cellIndex: number) => (
-                          <td key={cellIndex} className="p-1 border-b border-r border-slate-700 truncate max-w-[100px] text-slate-300">
+                          <td key={cellIndex} className="p-1 border-b border-r border-slate-200 dark:border-slate-700 truncate max-w-[100px] text-slate-600 dark:text-slate-300">
                             {String(cell)}
                           </td>
                         ))}
-                        {row.length > 10 && <td className="p-1 border-b border-slate-700 text-slate-500">...</td>}
+                        {row.length > 10 && <td className="p-1 border-b border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500">...</td>}
                       </tr>
                     ))}
                   </tbody>
@@ -86,10 +86,10 @@ export function WatchNode({ id, selected }: { id: string, selected?: boolean }) 
               </div>
             </div>
           ) : (
-            <div className="text-xs text-slate-500 flex items-center justify-center h-full">No data. Run source node.</div>
+            <div className="text-xs text-slate-400 dark:text-slate-500 flex items-center justify-center h-full">No data. Run source node.</div>
           )}
         </div>
-        <Handle type="source" position={Position.Right} className="w-3 h-3 bg-orange-500 border-2 border-slate-800" />
+        <Handle type="source" position={Position.Right} className="w-3 h-3 bg-orange-500 border-2 border-white dark:border-slate-800" />
       </div>
     </>
   );

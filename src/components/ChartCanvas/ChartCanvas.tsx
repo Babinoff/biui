@@ -93,15 +93,15 @@ export function ChartCanvas({ libraryId, config, className = '' }: ChartCanvasPr
   }, [isLoaded, config, libraryId]);
 
   if (error) {
-    return <div className={`flex items-center justify-center text-red-400 text-xs h-full w-full ${className}`}>{error}</div>;
+    return <div className={`flex items-center justify-center text-red-500 dark:text-red-400 text-xs h-full w-full ${className}`}>{error}</div>;
   }
 
   if (!isLoaded) {
-    return <div className={`flex items-center justify-center text-slate-400 text-xs h-full w-full ${className}`}>Loading {libraries[libraryId]?.name}...</div>;
+    return <div className={`flex items-center justify-center text-slate-500 dark:text-slate-400 text-xs h-full w-full ${className}`}>Loading {libraries[libraryId]?.name}...</div>;
   }
 
   if (!config) {
-    return <div className={`flex items-center justify-center text-slate-500 text-xs h-full w-full ${className}`}>No configuration</div>;
+    return <div className={`flex items-center justify-center text-slate-400 dark:text-slate-500 text-xs h-full w-full ${className}`}>No configuration</div>;
   }
 
   return (

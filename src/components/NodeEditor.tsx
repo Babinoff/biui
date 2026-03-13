@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useEffect, useState } from 'react';
 import {
   ReactFlow,
   MiniMap,
@@ -11,9 +11,9 @@ import {
   useReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Save, Upload } from 'lucide-react';
+import { Save, Upload, Sun, Moon } from 'lucide-react';
 
-import { useStore } from '../store/useStore';
+import { useStore, AppNode } from '../store/useStore';
 import { DataSourceNode } from './nodes/DataSourceNode';
 import { TransformNode } from './nodes/TransformNode';
 import { VisualizationNode } from './nodes/VisualizationNode';
@@ -29,9 +29,56 @@ const nodeTypes = {
 };
 
 function FlowEditor() {
-  const { nodes, edges, dataSources, onNodesChange, onEdgesChange, onConnect, addNode, setSelectedNodeId, loadWorkspace } = useStore();
+  const { nodes, edges, dataSources, onNodesChange, onEdgesChange, onConnect, addNode, setSelectedNodeId, loadWorkspace, theme, toggleTheme } = useStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { screenToFlowPosition } = useReactFlow();
+  const [copiedNode, setCopiedNode] = useState<AppNode | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      // Do not trigger copy/paste if user is typing in an input or textarea
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+        const selectedNodeId = useStore.getState().selectedNodeId;
+        if (selectedNodeId) {
+          const nodeToCopy = useStore.getState().nodes.find(n => n.id === selectedNodeId);
+          if (nodeToCopy) {
+            setCopiedNode(nodeToCopy);
+          }
+        }
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+        if (copiedNode) {
+          const newNode = {
+            ...copiedNode,
+            id: `${copiedNode.type}-${Date.now()}`,
+            position: {
+              x: copiedNode.position.x + 50,
+              y: copiedNode.position.y + 50,
+            },
+            selected: true,
+          };
+          
+          // Deselect all existing nodes
+          useStore.getState().onNodesChange(
+            useStore.getState().nodes.map(n => ({ id: n.id, type: 'select', selected: false }))
+          );
+          
+          useStore.getState().addNode(newNode);
+          useStore.getState().setSelectedNodeId(newNode.id);
+          setCopiedNode(newNode); // Update copied node so pasting again offsets further
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [copiedNode]);
 
   const handleAddNode = (type: string) => {
     const position = screenToFlowPosition({
@@ -129,10 +176,11 @@ function FlowEditor() {
         onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
         fitView
-        className="bg-slate-950"
+        colorMode={theme}
+        className="bg-slate-50 dark:bg-slate-950 transition-colors"
       >
-        <Background color="#475569" variant={BackgroundVariant.Dots} gap={24} size={1} />
-        <Controls className="bg-slate-800 border-slate-700 fill-slate-200" />
+        <Background color={theme === 'dark' ? '#475569' : '#cbd5e1'} variant={BackgroundVariant.Dots} gap={24} size={1} />
+        <Controls className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 fill-slate-700 dark:fill-slate-200" />
         <MiniMap 
           nodeColor={(node) => {
             switch (node.type) {
@@ -143,15 +191,23 @@ function FlowEditor() {
               default: return '#94a3b8'; // slate-400
             }
           }}
-          maskColor="rgba(15, 23, 42, 0.7)"
-          className="bg-slate-900 border-slate-700"
+          maskColor={theme === 'dark' ? "rgba(15, 23, 42, 0.7)" : "rgba(248, 250, 252, 0.7)"}
+          className="bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-700"
         />
         
         <Panel position="top-right" className="flex flex-col gap-2">
-          <div className="bg-slate-800/80 p-2 rounded-lg border border-slate-700 backdrop-blur-sm flex gap-2 justify-end">
+          <div className="bg-white/80 dark:bg-slate-800/80 p-2 rounded-lg border border-slate-200 dark:border-slate-700 backdrop-blur-sm flex gap-2 justify-end shadow-sm">
+            <button 
+              onClick={() => toggleTheme()}
+              className="flex items-center justify-center w-7 h-7 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded transition-colors"
+              title="Toggle Theme"
+            >
+              {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+            </button>
+            <div className="w-px h-7 bg-slate-200 dark:bg-slate-700 mx-1"></div>
             <button 
               onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-1 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs rounded transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs rounded transition-colors"
               title="Load Workspace"
             >
               <Upload size={14} />
@@ -159,14 +215,14 @@ function FlowEditor() {
             </button>
             <button 
               onClick={handleSave}
-              className="flex items-center gap-1 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs rounded transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 text-xs rounded transition-colors"
               title="Save Workspace"
             >
               <Save size={14} />
               Save
             </button>
           </div>
-          <div className="bg-slate-800/80 p-2 rounded-lg border border-slate-700 backdrop-blur-sm flex gap-2">
+          <div className="bg-white/80 dark:bg-slate-800/80 p-2 rounded-lg border border-slate-200 dark:border-slate-700 backdrop-blur-sm flex gap-2 shadow-sm">
             <button 
               onClick={() => handleAddNode('dataSource')}
               className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded transition-colors"

@@ -65,6 +65,9 @@ type AppState = {
   isPresentationMode: boolean;
   setIsPresentationMode: (val: boolean) => void;
 
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
+
   loadWorkspace: (workspace: { nodes: AppNode[], edges: Edge[], dataSources: DataSource[], widgets?: WidgetConfig[] }) => void;
 };
 
@@ -150,6 +153,11 @@ export const useStore = create<AppState>()(
         set({ isPresentationMode: val });
       },
 
+      theme: 'dark',
+      toggleTheme: () => {
+        set({ theme: get().theme === 'dark' ? 'light' : 'dark' });
+      },
+
       loadWorkspace: (workspace) => {
         set({
           nodes: workspace.nodes || [],
@@ -169,6 +177,7 @@ export const useStore = create<AppState>()(
         widgets: state.widgets,
         leftPanelState: state.leftPanelState,
         rightPanelState: state.rightPanelState,
+        theme: state.theme,
       }),
     }
   )

@@ -80,13 +80,14 @@ export function DashboardEditor() {
 
   return (
     <div 
+      id="dashboard-editor-scroll-area"
       ref={containerRef}
-      className={`relative w-full h-full overflow-auto ${!isPresentationMode ? 'bg-[url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9IiMzMzQxNTUiLz48L3N2Zz4=")]' : 'bg-slate-950'}`}
+      className={`relative w-full h-full overflow-auto ${!isPresentationMode ? 'bg-[url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9IiNjYmQ1ZTEiLz48L3N2Zz4=")] dark:bg-[url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9IiMzMzQxNTUiLz48L3N2Zz4=")]' : 'bg-slate-50 dark:bg-slate-950'}`}
     >
       {widgets.map(widget => (
         <div
           key={widget.id}
-          className={`absolute bg-slate-900 border ${isPresentationMode ? 'border-slate-800' : 'border-slate-700'} rounded-lg shadow-xl flex flex-col overflow-hidden transition-shadow ${draggingId === widget.id ? 'shadow-2xl z-50 opacity-90' : 'z-10 hover:z-20'}`}
+          className={`absolute bg-white dark:bg-slate-900 border ${isPresentationMode ? 'border-slate-200 dark:border-slate-800' : 'border-slate-300 dark:border-slate-700'} rounded-lg shadow-xl flex flex-col overflow-hidden transition-shadow ${draggingId === widget.id ? 'shadow-2xl z-50 opacity-90' : 'z-10 hover:z-20'}`}
           style={{
             left: widget.x,
             top: widget.y,
@@ -97,20 +98,22 @@ export function DashboardEditor() {
           {/* Header */}
           {!isPresentationMode && (
             <div 
-              className="h-8 bg-slate-800/80 border-b border-slate-700 flex items-center justify-between px-2 cursor-move shrink-0"
+              className="h-8 bg-slate-100/80 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between px-2 cursor-move shrink-0"
               onMouseDown={(e) => handleDragStart(e, widget.id, widget.x, widget.y)}
             >
-              <div className="flex items-center gap-2 text-slate-400">
+              <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                 <GripHorizontal size={14} />
                 <span className="text-xs font-semibold">{widget.type === 'chart' ? 'Chart Widget' : 'Text Widget'}</span>
               </div>
-              <button 
-                onClick={(e) => { e.stopPropagation(); removeWidget(widget.id); }}
-                className="text-slate-500 hover:text-red-400 transition-colors"
-                title="Remove widget"
-              >
-                <Trash2 size={14} />
-              </button>
+              {widget.type !== 'chart' && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); removeWidget(widget.id); }}
+                  className="text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                  title="Remove widget"
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
             </div>
           )}
 
@@ -121,14 +124,14 @@ export function DashboardEditor() {
             )}
             {widget.type === 'text' && (
               isPresentationMode ? (
-                <div className="w-full h-full overflow-auto text-slate-200 text-sm prose prose-invert max-w-none custom-scrollbar">
+                <div className="w-full h-full overflow-auto text-slate-800 dark:text-slate-200 text-sm prose dark:prose-invert max-w-none custom-scrollbar">
                   <Markdown>{widget.data}</Markdown>
                 </div>
               ) : (
                 <textarea
                   value={widget.data}
                   onChange={(e) => updateWidget(widget.id, { data: e.target.value })}
-                  className="w-full h-full bg-transparent text-slate-200 text-sm resize-none focus:outline-none custom-scrollbar"
+                  className="w-full h-full bg-transparent text-slate-800 dark:text-slate-200 text-sm resize-none focus:outline-none custom-scrollbar"
                   placeholder="Enter text here (Markdown supported)..."
                 />
               )
@@ -141,7 +144,7 @@ export function DashboardEditor() {
               className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize"
               onMouseDown={(e) => handleResizeStart(e, widget.id, widget.width, widget.height)}
             >
-              <svg viewBox="0 0 10 10" className="w-full h-full text-slate-500 opacity-50">
+              <svg viewBox="0 0 10 10" className="w-full h-full text-slate-400 dark:text-slate-500 opacity-50">
                 <path d="M 8 10 L 10 10 L 10 8 M 5 10 L 10 10 L 10 5 M 2 10 L 10 10 L 10 2" fill="none" stroke="currentColor" strokeWidth="1" />
               </svg>
             </div>
@@ -150,7 +153,7 @@ export function DashboardEditor() {
       ))}
       
       {widgets.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center text-slate-500 text-sm pointer-events-none">
+        <div className="absolute inset-0 flex items-center justify-center text-slate-400 dark:text-slate-500 text-sm pointer-events-none">
           No widgets added yet. Add them from the Dashboard node.
         </div>
       )}

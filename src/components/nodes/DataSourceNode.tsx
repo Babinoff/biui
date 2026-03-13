@@ -19,16 +19,16 @@ export function DataSourceNode({ id, data }: { id: string, data: any }) {
   };
 
   return (
-    <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-lg min-w-[200px] overflow-hidden">
-      <div className="bg-indigo-900/50 p-2 border-b border-slate-700 flex items-center gap-2">
-        <Database size={14} className="text-indigo-400" />
-        <span className="text-xs font-semibold text-slate-200">Data Source</span>
+    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg min-w-[200px] overflow-hidden">
+      <div className="bg-indigo-50 dark:bg-indigo-900/50 p-2 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2">
+        <Database size={14} className="text-indigo-500 dark:text-indigo-400" />
+        <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">Data Source</span>
       </div>
       <div className="p-3 flex flex-col gap-2">
-        <div className="text-xs text-slate-400">Select File:</div>
+        <div className="text-xs text-slate-500 dark:text-slate-400">Select File:</div>
         <div className="relative">
           <select 
-            className="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-slate-300 appearance-none cursor-pointer focus:outline-none focus:border-indigo-500"
+            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded p-1.5 text-xs text-slate-700 dark:text-slate-300 appearance-none cursor-pointer focus:outline-none focus:border-indigo-500"
             value={data.selectedSourceId || ''}
             onChange={handleSelectChange}
           >
@@ -37,13 +37,13 @@ export function DataSourceNode({ id, data }: { id: string, data: any }) {
               <option key={ds.id} value={ds.id}>{ds.name}</option>
             ))}
           </select>
-          <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+          <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 pointer-events-none" />
         </div>
       </div>
       <Handle
         type="source"
         position={Position.Right}
-        className="w-3 h-3 bg-indigo-500 border-2 border-slate-800"
+        className="w-3 h-3 bg-indigo-500 border-2 border-white dark:border-slate-800"
       />
     </div>
   );
