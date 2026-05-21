@@ -50,19 +50,26 @@ export class PythonRunner {
 import pandas as pd
 import json
 
-# Load input data
-data_dicts = json.loads(input_json)
-df = pd.DataFrame(data_dicts)
+def run_user_code():
+    data_dicts = json.loads(input_json)
+    df = pd.DataFrame(data_dicts)
+    
+    user_globals = {'pd': pd, 'df': df}
+    
+    # Safely pass the user code
+    import builtins
+    user_globals['__builtins__'] = builtins
+    
+    user_code = ${JSON.stringify(code)}
+    
+    exec(user_code, user_globals)
+    
+    if 'result_df' in user_globals:
+        return user_globals['result_df']
+    else:
+        return user_globals['df']
 
-# --- USER CODE START ---
-${code}
-# --- USER CODE END ---
-
-# Ensure result_df exists, fallback to df if not explicitly created
-if 'result_df' not in locals():
-    result_df = df
-
-# Convert result back to JSON
+result_df = run_user_code()
 result_json = result_df.to_json(orient='split', date_format='iso')
 result_json
 `;

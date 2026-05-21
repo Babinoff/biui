@@ -105,8 +105,15 @@ export function PromptEditor({ nodeId }: { nodeId: string }) {
       let schema: ColumnInfo[] = [];
       let sampleData: Record<string, any>[] = [];
 
-      if (sourceNode?.type === 'dataSource' && sourceNode.data.selectedSourceId) {
-        const ds = dataSources.find(d => d.id === sourceNode.data.selectedSourceId);
+      let actualSourceNode = sourceNode;
+      // Traverse back if the source is a watch node
+      while (actualSourceNode?.type === 'watch') {
+        const watchIncomingEdges = edges.filter(e => e.target === actualSourceNode!.id);
+        actualSourceNode = nodes.find(n => n.id === watchIncomingEdges[0]?.source);
+      }
+
+      if (actualSourceNode?.type === 'dataSource' && actualSourceNode.data.selectedSourceId) {
+        const ds = dataSources.find(d => d.id === actualSourceNode.data.selectedSourceId);
         if (ds) {
           addLog(`Found data source: ${ds.name}`, 'info');
           schema = ds.headers.map(h => ({ name: h, type: 'unknown' }));
@@ -122,6 +129,19 @@ export function PromptEditor({ nodeId }: { nodeId: string }) {
         } else {
           addLog('Selected data source not found in store.', 'error');
         }
+      } else if (actualSourceNode?.data?.outputHeaders) {
+        addLog(`Found transformed data source`, 'info');
+        const headers = actualSourceNode.data.outputHeaders as string[];
+        const data = actualSourceNode.data.outputData as any[][];
+        schema = headers.map(h => ({ name: h, type: 'unknown' }));
+        sampleData = data.slice(0, 2).map(row => {
+          const obj: Record<string, any> = {};
+          headers.forEach((h, i) => {
+            obj[h] = row[i];
+          });
+          return obj;
+        });
+        addLog(`Extracted schema (${schema.length} columns) and sample data from previous transform.`, 'info');
       } else {
         addLog('No data source connected. Proceeding without context.', 'info');
       }

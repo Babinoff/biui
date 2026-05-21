@@ -11,7 +11,7 @@ import {
   useReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Save, Upload, Sun, Moon } from 'lucide-react';
+import { Save, Upload, Sun, Moon, Zap } from 'lucide-react';
 
 import { useStore, AppNode } from '../store/useStore';
 import { DataSourceNode } from './nodes/DataSourceNode';
@@ -29,7 +29,7 @@ const nodeTypes = {
 };
 
 function FlowEditor() {
-  const { nodes, edges, dataSources, onNodesChange, onEdgesChange, onConnect, addNode, setSelectedNodeId, loadWorkspace, theme, toggleTheme } = useStore();
+  const { nodes, edges, dataSources, onNodesChange, onEdgesChange, onConnect, addNode, setSelectedNodeId, loadWorkspace, theme, toggleTheme, llmProvider, setLlmProvider } = useStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { screenToFlowPosition } = useReactFlow();
   const [copiedNode, setCopiedNode] = useState<AppNode | null>(null);
@@ -197,6 +197,19 @@ function FlowEditor() {
         
         <Panel position="top-right" className="flex flex-col gap-2">
           <div className="bg-white/80 dark:bg-slate-800/80 p-2 rounded-lg border border-slate-200 dark:border-slate-700 backdrop-blur-sm flex gap-2 justify-end shadow-sm">
+            <button 
+              onClick={() => setLlmProvider(llmProvider === 'mistral' ? 'gemini' : 'mistral')}
+              className={`flex items-center gap-1 px-3 py-1.5 text-xs rounded transition-colors ${
+                llmProvider === 'mistral' 
+                  ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:hover:bg-amber-900/50' 
+                  : 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50'
+              }`}
+              title="Toggle LLM Provider"
+            >
+              <Zap size={14} />
+              {llmProvider === 'mistral' ? 'Mistral' : 'Gemini'}
+            </button>
+            <div className="w-px h-7 bg-slate-200 dark:bg-slate-700 mx-1"></div>
             <button 
               onClick={() => toggleTheme()}
               className="flex items-center justify-center w-7 h-7 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded transition-colors"

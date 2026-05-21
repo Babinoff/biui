@@ -1,6 +1,8 @@
 import { GoogleGenAI } from '@google/genai';
+import { Mistral } from '@mistralai/mistralai';
 import { GenerationContext, GenerationResult } from '../types/llm';
 import { parseCodeFromResponse } from './codeParser';
+import { useStore } from '../store/useStore';
 
 export class LLMClient {
   static async generateCode(
@@ -8,10 +10,9 @@ export class LLMClient {
     context: GenerationContext,
     onLog?: (msg: string) => void
   ): Promise<GenerationResult> {
-    onLog?.('Initializing Gemini client...');
-    // Create a new instance right before making an API call to ensure it has the key
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-
+    const provider = useStore.getState().llmProvider;
+    onLog?.(`Initializing ${provider === 'mistral' ? 'Mistral' : 'Gemini'} client...`);
+    
     const systemInstruction = `
 Твоя задача — написать Python-код (pandas) для обработки данных.
 Код должен быть чистым, эффективным и содержать только необходимые импорты и логику.
@@ -35,18 +36,34 @@ ${context.previousTransforms && context.previousTransforms.length > 0 ?
 `;
 
     try {
-      onLog?.('Sending request to gemini-3.1-pro-preview...');
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.1-pro-preview',
-        contents: `Выполни действие пользователя: ${prompt}`,
-        config: {
-          systemInstruction,
+      let text = '';
+      if (provider === 'mistral') {
+        onLog?.('Sending request to mistral-large-latest...');
+        const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+        const response = await client.chat.complete({
+          model: 'mistral-large-latest',
           temperature: 0.2,
-        },
-      });
+          messages: [
+            { role: 'system', content: systemInstruction },
+            { role: 'user', content: `Выполни действие пользователя: ${prompt}` }
+          ],
+        });
+        text = (response.choices?.[0]?.message?.content as string) || '';
+      } else {
+        onLog?.('Sending request to gemini-3.1-pro-preview...');
+        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        const response = await ai.models.generateContent({
+          model: 'gemini-3.1-pro-preview',
+          contents: `Выполни действие пользователя: ${prompt}`,
+          config: {
+            systemInstruction,
+            temperature: 0.2,
+          },
+        });
+        text = response.text || '';
+      }
 
       onLog?.('Response received. Parsing code...');
-      const text = response.text || '';
       const code = parseCodeFromResponse(text);
 
       onLog?.('Code parsed successfully.');
@@ -73,8 +90,8 @@ ${context.previousTransforms && context.previousTransforms.length > 0 ?
     prompt: string,
     onLog?: (msg: string) => void
   ): Promise<any> {
-    onLog?.('Initializing Gemini client for chart generation...');
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    const provider = useStore.getState().llmProvider;
+    onLog?.(`Initializing ${provider === 'mistral' ? 'Mistral' : 'Gemini'} client for chart generation...`);
 
     let libInstruction = '';
     if (libraryId === 'echarts') {
@@ -99,18 +116,34 @@ Return ONLY a valid JSON object. Do not include markdown formatting like \`\`\`j
 `;
 
     try {
-      onLog?.(`Sending request to gemini-3-flash-preview for ${libraryId} config...`);
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: systemInstruction,
-        config: {
+      let text = '{}';
+      if (provider === 'mistral') {
+        onLog?.(`Sending request to mistral-large-latest for ${libraryId} config...`);
+        const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+        const response = await client.chat.complete({
+          model: 'mistral-large-latest',
           temperature: 0.1,
-          responseMimeType: 'application/json',
-        },
-      });
+          responseFormat: { type: 'json_object' },
+          messages: [
+            { role: 'system', content: systemInstruction }
+          ],
+        });
+        text = (response.choices?.[0]?.message?.content as string) || '{}';
+      } else {
+        onLog?.(`Sending request to gemini-3-flash-preview for ${libraryId} config...`);
+        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        const response = await ai.models.generateContent({
+          model: 'gemini-3-flash-preview',
+          contents: systemInstruction,
+          config: {
+            temperature: 0.1,
+            responseMimeType: 'application/json',
+          },
+        });
+        text = response.text || '{}';
+      }
 
       onLog?.('Parsing chart configuration...');
-      const text = response.text || '{}';
       const result = JSON.parse(text);
       return result;
     } catch (error: any) {

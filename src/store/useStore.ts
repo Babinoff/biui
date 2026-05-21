@@ -68,6 +68,9 @@ type AppState = {
   theme: 'light' | 'dark';
   toggleTheme: () => void;
 
+  llmProvider: 'mistral' | 'gemini';
+  setLlmProvider: (provider: 'mistral' | 'gemini') => void;
+
   loadWorkspace: (workspace: { nodes: AppNode[], edges: Edge[], dataSources: DataSource[], widgets?: WidgetConfig[] }) => void;
 };
 
@@ -158,6 +161,11 @@ export const useStore = create<AppState>()(
         set({ theme: get().theme === 'dark' ? 'light' : 'dark' });
       },
 
+      llmProvider: 'mistral',
+      setLlmProvider: (provider) => {
+        set({ llmProvider: provider });
+      },
+
       loadWorkspace: (workspace) => {
         set({
           nodes: workspace.nodes || [],
@@ -178,6 +186,7 @@ export const useStore = create<AppState>()(
         leftPanelState: state.leftPanelState,
         rightPanelState: state.rightPanelState,
         theme: state.theme,
+        llmProvider: state.llmProvider,
       }),
     }
   )
