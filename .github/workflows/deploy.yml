@@ -39,6 +39,8 @@ jobs:
 
       - name: Build project
         # Устанавливаем base path равным имени репозитория для корректной загрузки ассетов (CSS/JS)
+        env:
+          VITE_MISTRAL_API_KEY: ${{ secrets.VITE_MISTRAL_API_KEY }}
         run: npm run build -- --base=/${{ github.event.repository.name }}/
 
       - name: Upload artifact
