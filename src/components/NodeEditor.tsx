@@ -29,7 +29,11 @@ const nodeTypes = {
 };
 
 function FlowEditor() {
-  const { nodes, edges, dataSources, onNodesChange, onEdgesChange, onConnect, addNode, setSelectedNodeId, loadWorkspace, theme, toggleTheme, llmProvider, setLlmProvider } = useStore();
+  const { 
+    nodes, edges, dataSources, onNodesChange, onEdgesChange, onConnect, 
+    addNode, setSelectedNodeId, loadWorkspace, theme, toggleTheme, 
+    llmProvider, setLlmProvider, mistralToken, setMistralToken, geminiToken, setGeminiToken 
+  } = useStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { screenToFlowPosition } = useReactFlow();
   const [copiedNode, setCopiedNode] = useState<AppNode | null>(null);
@@ -198,7 +202,25 @@ function FlowEditor() {
         />
         
         <Panel position="top-right" className="flex flex-col gap-2">
-          <div className="bg-white/80 dark:bg-slate-800/80 p-2 rounded-lg border border-slate-200 dark:border-slate-700 backdrop-blur-sm flex gap-2 justify-end shadow-sm">
+          <div className="bg-white/80 dark:bg-slate-800/80 p-2 rounded-lg border border-slate-200 dark:border-slate-700 backdrop-blur-sm flex gap-2 justify-end shadow-sm items-center">
+            <input
+              type="password"
+              placeholder={`${llmProvider === 'mistral' ? 'Mistral' : 'Gemini'} API Key`}
+              value={
+                llmProvider === 'mistral' 
+                  ? mistralToken
+                  : geminiToken
+              }
+              onChange={(e) => {
+                if (llmProvider === 'mistral') {
+                  setMistralToken(e.target.value);
+                } else {
+                  setGeminiToken(e.target.value);
+                }
+              }}
+              className="px-2 py-1.5 text-xs rounded border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 w-48 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              title={`Enter your ${llmProvider === 'mistral' ? 'Mistral' : 'Gemini'} API Key`}
+            />
             <button 
               onClick={() => setLlmProvider(llmProvider === 'mistral' ? 'gemini' : 'mistral')}
               className={`flex items-center gap-1 px-3 py-1.5 text-xs rounded transition-colors ${

@@ -10,7 +10,11 @@ export class LLMClient {
     context: GenerationContext,
     onLog?: (msg: string) => void
   ): Promise<GenerationResult> {
-    const provider = useStore.getState().llmProvider;
+    const storeState = useStore.getState();
+    const provider = storeState.llmProvider;
+    const mistralToken = storeState.mistralToken;
+    const geminiToken = storeState.geminiToken;
+    
     onLog?.(`Initializing ${provider === 'mistral' ? 'Mistral' : 'Gemini'} client...`);
     
     const systemInstruction = `
@@ -38,8 +42,9 @@ ${context.previousTransforms && context.previousTransforms.length > 0 ?
     try {
       let text = '';
       if (provider === 'mistral') {
+        if (!mistralToken) throw new Error('Mistral API Key is missing. Please provide it in the top menu.');
         onLog?.('Sending request to mistral-large-latest...');
-        const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+        const client = new Mistral({ apiKey: mistralToken });
         const response = await client.chat.complete({
           model: 'mistral-large-latest',
           temperature: 0.2,
@@ -50,8 +55,9 @@ ${context.previousTransforms && context.previousTransforms.length > 0 ?
         });
         text = (response.choices?.[0]?.message?.content as string) || '';
       } else {
+        if (!geminiToken) throw new Error('Gemini API Key is missing. Please provide it in the top menu.');
         onLog?.('Sending request to gemini-3.1-pro-preview...');
-        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        const ai = new GoogleGenAI({ apiKey: geminiToken });
         const response = await ai.models.generateContent({
           model: 'gemini-3.1-pro-preview',
           contents: `Выполни действие пользователя: ${prompt}`,
@@ -90,7 +96,11 @@ ${context.previousTransforms && context.previousTransforms.length > 0 ?
     prompt: string,
     onLog?: (msg: string) => void
   ): Promise<any> {
-    const provider = useStore.getState().llmProvider;
+    const storeState = useStore.getState();
+    const provider = storeState.llmProvider;
+    const mistralToken = storeState.mistralToken;
+    const geminiToken = storeState.geminiToken;
+
     onLog?.(`Initializing ${provider === 'mistral' ? 'Mistral' : 'Gemini'} client for chart generation...`);
 
     let libInstruction = '';
@@ -118,8 +128,9 @@ Return ONLY a valid JSON object. Do not include markdown formatting like \`\`\`j
     try {
       let text = '{}';
       if (provider === 'mistral') {
+        if (!mistralToken) throw new Error('Mistral API Key is missing. Please provide it in the top menu.');
         onLog?.(`Sending request to mistral-large-latest for ${libraryId} config...`);
-        const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY });
+        const client = new Mistral({ apiKey: mistralToken });
         const response = await client.chat.complete({
           model: 'mistral-large-latest',
           temperature: 0.1,
@@ -130,8 +141,9 @@ Return ONLY a valid JSON object. Do not include markdown formatting like \`\`\`j
         });
         text = (response.choices?.[0]?.message?.content as string) || '{}';
       } else {
+        if (!geminiToken) throw new Error('Gemini API Key is missing. Please provide it in the top menu.');
         onLog?.(`Sending request to gemini-3-flash-preview for ${libraryId} config...`);
-        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        const ai = new GoogleGenAI({ apiKey: geminiToken });
         const response = await ai.models.generateContent({
           model: 'gemini-3-flash-preview',
           contents: systemInstruction,

@@ -74,6 +74,11 @@ type AppState = {
   llmProvider: 'mistral' | 'gemini';
   setLlmProvider: (provider: 'mistral' | 'gemini') => void;
 
+  mistralToken: string;
+  setMistralToken: (token: string) => void;
+  geminiToken: string;
+  setGeminiToken: (token: string) => void;
+
   loadWorkspace: (workspace: { nodes: AppNode[], edges: Edge[], dataSources: DataSource[], widgets?: WidgetConfig[] }) => void;
 };
 
@@ -171,7 +176,23 @@ export const useStore = create<AppState>()(
 
       llmProvider: 'mistral',
       setLlmProvider: (provider) => {
-        set({ llmProvider: provider });
+        set((state) => {
+          const updates: Partial<AppState> = { llmProvider: provider };
+          if (provider === 'mistral' && !state.mistralToken) {
+            updates.mistralToken = import.meta.env.VITE_MISTRAL_API_KEY || '';
+          }
+          return updates;
+        });
+      },
+
+      mistralToken: import.meta.env.VITE_MISTRAL_API_KEY || '',
+      setMistralToken: (token) => {
+        set({ mistralToken: token });
+      },
+
+      geminiToken: '',
+      setGeminiToken: (token) => {
+        set({ geminiToken: token });
       },
 
       loadWorkspace: (workspace) => {
@@ -196,6 +217,8 @@ export const useStore = create<AppState>()(
         rightPanelState: state.rightPanelState,
         theme: state.theme,
         llmProvider: state.llmProvider,
+        mistralToken: state.mistralToken,
+        geminiToken: state.geminiToken,
       }),
     }
   )
