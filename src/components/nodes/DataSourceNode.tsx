@@ -1,11 +1,12 @@
 import React, { useEffect } from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { Database, ChevronDown } from 'lucide-react';
+import { Database, ChevronDown, Copy } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 
 export function DataSourceNode({ id, data }: { id: string, data: any }) {
   const dataSources = useStore((s) => s.dataSources);
   const updateNodeData = useStore((s) => s.updateNodeData);
+  const duplicateNode = useStore((s) => s.duplicateNode);
 
   // Auto-select if only one data source exists and none is selected
   useEffect(() => {
@@ -20,9 +21,18 @@ export function DataSourceNode({ id, data }: { id: string, data: any }) {
 
   return (
     <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg min-w-[200px] overflow-hidden">
-      <div className="bg-indigo-50 dark:bg-indigo-900/50 p-2 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2">
-        <Database size={14} className="text-indigo-500 dark:text-indigo-400" />
-        <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">Data Source</span>
+      <div className="bg-indigo-50 dark:bg-indigo-900/50 p-2 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Database size={14} className="text-indigo-500 dark:text-indigo-400" />
+          <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">Data Source</span>
+        </div>
+        <button 
+          onClick={() => duplicateNode(id)}
+          className="text-slate-400 hover:text-indigo-500 dark:text-slate-500 dark:hover:text-indigo-400 transition-colors"
+          title="Duplicate Node"
+        >
+          <Copy size={12} />
+        </button>
       </div>
       <div className="p-3 flex flex-col gap-2">
         <div className="text-xs text-slate-500 dark:text-slate-400">Select File:</div>

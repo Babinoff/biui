@@ -43,6 +43,7 @@ type AppState = {
   onEdgesChange: OnEdgesChange;
   onConnect: OnConnect;
   addNode: (node: AppNode) => void;
+  duplicateNode: (id: string) => void;
   updateNodeData: (id: string, data: any) => void;
 
   dataSources: DataSource[];
@@ -105,6 +106,31 @@ export const useStore = create<AppState>()(
       addNode: (node: AppNode) => {
         set({
           nodes: [...get().nodes, node],
+        });
+      },
+      duplicateNode: (id: string) => {
+        const nodeToCopy = get().nodes.find((n) => n.id === id);
+        if (!nodeToCopy) return;
+
+        // Deep copy to prevent shared object references (e.g. prompt history)
+        const clonedNode = JSON.parse(JSON.stringify(nodeToCopy));
+        
+        const newNode: AppNode = {
+          ...clonedNode,
+          id: `${clonedNode.type}-${Date.now()}`,
+          position: {
+            x: clonedNode.position.x + 50,
+            y: clonedNode.position.y + 50,
+          },
+          selected: true,
+        };
+
+        set({
+          nodes: [
+            ...get().nodes.map((n) => ({ ...n, selected: false })),
+            newNode,
+          ],
+          selectedNodeId: newNode.id,
         });
       },
       updateNodeData: (id: string, data: any) => {

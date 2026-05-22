@@ -56,14 +56,25 @@ function FlowEditor() {
         }
       }
 
+      if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+        e.preventDefault();
+        const selectedNodeId = useStore.getState().selectedNodeId;
+        if (selectedNodeId) {
+          useStore.getState().duplicateNode(selectedNodeId);
+        }
+      }
+
       if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
         if (copiedNode) {
+          // Deep clone to ensure independent object references for data/history
+          const clonedNode = JSON.parse(JSON.stringify(copiedNode));
+          
           const newNode = {
-            ...copiedNode,
-            id: `${copiedNode.type}-${Date.now()}`,
+            ...clonedNode,
+            id: `${clonedNode.type}-${Date.now()}`,
             position: {
-              x: copiedNode.position.x + 50,
-              y: copiedNode.position.y + 50,
+              x: clonedNode.position.x + 50,
+              y: clonedNode.position.y + 50,
             },
             selected: true,
           };
@@ -75,7 +86,9 @@ function FlowEditor() {
           
           useStore.getState().addNode(newNode);
           useStore.getState().setSelectedNodeId(newNode.id);
-          setCopiedNode(newNode); // Update copied node so pasting again offsets further
+          
+          // Update copied node to the new cloned one so pasting again offsets further
+          setCopiedNode(newNode); 
         }
       }
     };

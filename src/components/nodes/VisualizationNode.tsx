@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { BarChart2, Settings2, Play, Loader2, Terminal, ChevronDown, Code2, History } from 'lucide-react';
+import { BarChart2, Settings2, Play, Loader2, Terminal, ChevronDown, Code2, History, Copy } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { LLMClient } from '../../services/llmClient';
 
 export function VisualizationNode({ id }: { id: string }) {
   const node = useStore(s => s.nodes.find(n => n.id === id));
   const updateNodeData = useStore(s => s.updateNodeData);
+  const duplicateNode = useStore(s => s.duplicateNode);
   const edges = useStore(s => s.edges);
   const nodes = useStore(s => s.nodes);
   const dataSources = useStore(s => s.dataSources);
@@ -179,9 +180,18 @@ export function VisualizationNode({ id }: { id: string }) {
           <BarChart2 size={14} className="text-emerald-500 dark:text-emerald-400" />
           <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">Visualization</span>
         </div>
-        <button onClick={() => setShowConfig(!showConfig)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-          <Settings2 size={14} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => duplicateNode(id)}
+            className="text-slate-400 hover:text-emerald-500 dark:text-slate-500 dark:hover:text-emerald-400 transition-colors"
+            title="Duplicate Node"
+          >
+            <Copy size={12} />
+          </button>
+          <button onClick={() => setShowConfig(!showConfig)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+            <Settings2 size={14} />
+          </button>
+        </div>
       </div>
 
       {showConfig && (

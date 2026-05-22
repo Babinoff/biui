@@ -1,9 +1,10 @@
 import React from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { LayoutDashboard } from 'lucide-react';
+import { LayoutDashboard, Copy } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 
 export function DashboardNode({ id }: { id: string }) {
+  const duplicateNode = useStore((s) => s.duplicateNode);
   const edges = useStore(s => s.edges);
   const nodes = useStore(s => s.nodes);
 
@@ -13,9 +14,18 @@ export function DashboardNode({ id }: { id: string }) {
     <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg min-w-[200px] overflow-hidden">
       <Handle type="target" position={Position.Left} className="w-3 h-3 bg-purple-500 border-2 border-white dark:border-slate-800" />
       
-      <div className="bg-purple-50 dark:bg-purple-900/50 p-2 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2">
-        <LayoutDashboard size={14} className="text-purple-500 dark:text-purple-400" />
-        <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">Dashboard</span>
+      <div className="bg-purple-50 dark:bg-purple-900/50 p-2 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <LayoutDashboard size={14} className="text-purple-500 dark:text-purple-400" />
+          <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">Dashboard</span>
+        </div>
+        <button 
+          onClick={() => duplicateNode(id)}
+          className="text-slate-400 hover:text-purple-500 dark:text-slate-500 dark:hover:text-purple-400 transition-colors"
+          title="Duplicate Node"
+        >
+          <Copy size={12} />
+        </button>
       </div>
       
       <div className="p-3 flex flex-col gap-3">
