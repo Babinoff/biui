@@ -107,7 +107,45 @@ export function VisualizationNode({ id }: { id: string }) {
   const handleRun = () => {
     if (!generatedConfig) return;
     try {
-      const parsedConfig = JSON.parse(generatedConfig as string);
+      const incomingEdges = edges.filter(e => e.target === id);
+      const sourceNode = nodes.find(n => n.id === incomingEdges[0]?.source);
+      
+      let actualSourceNode = sourceNode;
+      while (actualSourceNode?.type === 'watch') {
+        const watchIncomingEdges = edges.filter(e => e.target === actualSourceNode!.id);
+        actualSourceNode = nodes.find(n => n.id === watchIncomingEdges[0]?.source);
+      }
+      
+      let inputHeaders: string[] = [];
+      let inputData: any[][] = [];
+
+      if (actualSourceNode?.type === 'dataSource' && actualSourceNode.data.selectedSourceId) {
+        const ds = dataSources.find(d => d.id === actualSourceNode.data.selectedSourceId);
+        if (ds) {
+          inputHeaders = ds.headers;
+          inputData = ds.previewData;
+        }
+      } else if (actualSourceNode?.data?.outputHeaders) {
+        inputHeaders = (actualSourceNode.data.outputHeaders || []) as string[];
+        inputData = (actualSourceNode.data.outputData || []) as any[][];
+      }
+
+      let configStr = generatedConfig as string;
+      
+      if (libraryId === 'echarts') {
+        const datasetStr = JSON.stringify([inputHeaders, ...inputData]);
+        configStr = configStr.replace(/"\$dataset"/g, datasetStr);
+      } else {
+        inputHeaders.forEach((header, index) => {
+          const colData = inputData.map(row => row[index]);
+          const colDataStr = JSON.stringify(colData);
+          const escapedHeader = header.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(`"\\$col_${escapedHeader}"`, 'g');
+          configStr = configStr.replace(regex, colDataStr);
+        });
+      }
+
+      const parsedConfig = JSON.parse(configStr);
       const finalConfig = { type: chartType as any, ...parsedConfig };
       if (libraryId !== 'echarts') {
         finalConfig.data = parsedConfig.data || parsedConfig;

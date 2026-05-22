@@ -105,11 +105,14 @@ ${context.previousTransforms && context.previousTransforms.length > 0 ?
 
     let libInstruction = '';
     if (libraryId === 'echarts') {
-      libInstruction = `Generate a valid ECharts option object. The root object should be the options (e.g., { xAxis: {...}, yAxis: {...}, series: [...] }).`;
+      libInstruction = `Generate a valid ECharts option object. The root object should be the options (e.g., { xAxis: {...}, yAxis: {...}, series: [...] }).
+IMPORTANT: DO NOT hardcode the actual data in the JSON. You MUST use the exact string placeholder "$dataset" for the \`dataset.source\` property (e.g. \`dataset: { source: "$dataset" }\`). We will inject the 2D data array there. Use \`encode\` in your series to map the columns by header name.`;
     } else if (libraryId === 'chartjs') {
-      libInstruction = `Generate a valid Chart.js configuration object. Return a JSON object with 'data' and 'options' properties (e.g., { data: { labels: [...], datasets: [...] }, options: {...} }).`;
+      libInstruction = `Generate a valid Chart.js configuration object. Return a JSON object with 'data' and 'options' properties.
+IMPORTANT: DO NOT hardcode the actual data arrays. For any data array (like labels or dataset data), you MUST use the exact string placeholder "$col_HEADERNAME" (e.g. "$col_Month" or "$col_Sales"). We will replace these placeholders with the actual data arrays before rendering.`;
     } else if (libraryId === 'plotly') {
-      libInstruction = `Generate a valid Plotly configuration object. Return a JSON object with 'data' (array of traces) and 'options' (layout) properties (e.g., { data: [...], options: {...} }).`;
+      libInstruction = `Generate a valid Plotly configuration object. Return a JSON object with 'data' (array of traces) and 'options' (layout) properties.
+IMPORTANT: DO NOT hardcode the actual data arrays. For any data array (like x or y values in traces), you MUST use the exact string placeholder "$col_HEADERNAME" (e.g. "$col_Month" or "$col_Sales"). We will replace these placeholders with the actual data arrays before rendering.`;
     }
 
     const systemInstruction = `
