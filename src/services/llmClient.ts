@@ -116,6 +116,7 @@ ${context.previousTransforms && context.previousTransforms.length > 0 ?
 You are a data visualization expert.
 Your task is to generate a JSON configuration for a ${chartType} chart using the ${libraryId} library.
 ${libInstruction}
+IMPORTANT: Do not hardcode font colors, text colors, or background colors. Let the charting library handle them automatically so the chart can adapt to light and dark themes.
 
 Input Data Headers: ${JSON.stringify(headers)}
 Input Data Sample (first 10 rows): ${JSON.stringify(data.slice(0, 10))}

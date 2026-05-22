@@ -18,6 +18,7 @@ export function ChartCanvas({ libraryId, config, className = '' }: ChartCanvasPr
 
   const selectedDataValue = useStore(s => s.selectedDataValue);
   const setSelectedDataValue = useStore(s => s.setSelectedDataValue);
+  const theme = useStore(s => s.theme);
 
   useEffect(() => {
     let mounted = true;
@@ -43,8 +44,11 @@ export function ChartCanvas({ libraryId, config, className = '' }: ChartCanvasPr
           chartInstanceRef.current.dispose();
         }
         const echarts = (window as any).echarts;
-        const chart = echarts.init(containerRef.current);
-        chart.setOption(config.data);
+        const chart = echarts.init(containerRef.current, theme === 'dark' ? 'dark' : undefined);
+        
+        // Ensure background is transparent so it doesn't clash with our UI
+        const finalConfig = { ...config.data, backgroundColor: 'transparent' };
+        chart.setOption(finalConfig);
         chartInstanceRef.current = chart;
         
         chart.on('click', (params: any) => {
@@ -75,6 +79,15 @@ export function ChartCanvas({ libraryId, config, className = '' }: ChartCanvasPr
           chartInstanceRef.current.destroy();
         }
         const Chart = (window as any).Chart;
+        
+        if (theme === 'dark') {
+          Chart.defaults.color = '#cbd5e1';
+          Chart.defaults.borderColor = '#334155';
+        } else {
+          Chart.defaults.color = '#475569';
+          Chart.defaults.borderColor = '#e2e8f0';
+        }
+
         chartInstanceRef.current = new Chart(canvasRef.current, {
           type: config.type,
           data: config.data,
@@ -103,7 +116,19 @@ export function ChartCanvas({ libraryId, config, className = '' }: ChartCanvasPr
       else if (libraryId === 'plotly' && containerRef.current) {
         const Plotly = (window as any).Plotly;
         const plotlyDiv = containerRef.current;
-        Plotly.newPlot(plotlyDiv, config.data, { ...config.options, autosize: true }, { responsive: true });
+        
+        const plotlyOptions = { ...config.options, autosize: true };
+        if (theme === 'dark') {
+          plotlyOptions.font = { ...plotlyOptions.font, color: '#cbd5e1' };
+          plotlyOptions.plot_bgcolor = 'transparent';
+          plotlyOptions.paper_bgcolor = 'transparent';
+        } else {
+          plotlyOptions.font = { ...plotlyOptions.font, color: '#475569' };
+          plotlyOptions.plot_bgcolor = 'transparent';
+          plotlyOptions.paper_bgcolor = 'transparent';
+        }
+
+        Plotly.newPlot(plotlyDiv, config.data, plotlyOptions, { responsive: true });
         
         (plotlyDiv as any).on('plotly_click', (data: any) => {
           if (data.points && data.points.length > 0) {
@@ -130,7 +155,7 @@ export function ChartCanvas({ libraryId, config, className = '' }: ChartCanvasPr
       console.error('Chart rendering error:', err);
       setError(err.message);
     }
-  }, [isLoaded, config, libraryId]);
+  }, [isLoaded, config, libraryId, theme]);
 
   useEffect(() => {
     if (!isLoaded || !chartInstanceRef.current) return;
