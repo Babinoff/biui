@@ -217,7 +217,7 @@ export function PromptEditor({ nodeId }: { nodeId: string }) {
           <button
             onClick={handleGenerate}
             disabled={isGenerating || !prompt.trim()}
-            className="absolute bottom-2 right-6 p-1 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-500 text-white rounded transition-colors"
+            className="absolute bottom-2 right-4 p-1 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-500 text-white rounded transition-colors"
             title="Generate (Cmd/Ctrl + Enter)"
           >
             {isGenerating ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}

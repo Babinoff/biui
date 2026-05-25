@@ -108,10 +108,19 @@ ${context.previousTransforms && context.previousTransforms.length > 0 ?
     if (libraryId === 'echarts') {
       libInstruction = `For the 'config' property, generate a valid ECharts option object. The root of this config should be the options (e.g., { xAxis: {...}, yAxis: {...}, series: [...] }).
 IMPORTANT: DO NOT hardcode the actual data arrays. You MUST use the exact string placeholder "$dataset" for the FIRST \`dataset.source\` property (e.g. \`dataset: [{ source: "$dataset" }, ...]\`). We will inject the 2D data array there.
-If you need to group data by a category to create multiple series (e.g. to show a legend with colors for each category), you should use ECharts \`dataset.transform\` of type \`filter\` for each unique category.
-CRITICAL: The ECharts filter config syntax MUST be exactly like this:
-{ "transform": { "type": "filter", "config": { "dimension": "ColumnName", "=": "Value" } } }
-Do not use "eq" or "value" objects inside config! Then create a series for each datasetIndex (starting from 1).
+If you need to group data by a category to create multiple series (e.g. to show a legend with colors for each category), you MUST use ECharts \`dataset.transform\` of type \`filter\` for each unique category.
+CRITICAL ECHARTS FILTER SYNTAX EXAMPLE:
+If you want to group by "CategoryColumn" which has values "A" and "B":
+"dataset": [
+  { "source": "$dataset" },
+  { "transform": { "type": "filter", "config": { "dimension": "CategoryColumn", "=": "A" } } },
+  { "transform": { "type": "filter", "config": { "dimension": "CategoryColumn", "=": "B" } } }
+],
+"series": [
+  { "type": "bar", "datasetIndex": 1, "name": "A" },
+  { "type": "bar", "datasetIndex": 2, "name": "B" }
+]
+Do not use "eq" or "value" objects inside config! Use the exact syntax shown above.
 DO NOT hardcode \`xAxis.data\` or \`legend.data\`. ECharts infers them automatically. Set \`xAxis.type: 'category'\` if needed.`;
     } else if (libraryId === 'chartjs') {
       libInstruction = `For the 'config' property, generate a valid Chart.js configuration object with 'data' and 'options' properties.
