@@ -93,7 +93,9 @@ ${context.previousTransforms && context.previousTransforms.length > 0 ?
     headers: string[],
     data: any[][],
     prompt: string,
-    onLog?: (msg: string) => void
+    onLog?: (msg: string) => void,
+    promptHistory?: any[],
+    uniqueCategories?: Record<string, string[]>
   ): Promise<{ chartType: string, config: any }> {
     const storeState = useStore.getState();
     const provider = storeState.llmProvider;
@@ -105,14 +107,33 @@ ${context.previousTransforms && context.previousTransforms.length > 0 ?
     let libInstruction = '';
     if (libraryId === 'echarts') {
       libInstruction = `For the 'config' property, generate a valid ECharts option object. The root of this config should be the options (e.g., { xAxis: {...}, yAxis: {...}, series: [...] }).
-IMPORTANT: DO NOT hardcode the actual data in the JSON. You MUST use the exact string placeholder "$dataset" for the \`dataset.source\` property (e.g. \`dataset: { source: "$dataset" }\`). We will inject the 2D data array there. Use \`encode\` in your series to map the columns by header name.`;
+IMPORTANT: DO NOT hardcode the actual data arrays. You MUST use the exact string placeholder "$dataset" for the FIRST \`dataset.source\` property (e.g. \`dataset: [{ source: "$dataset" }, ...]\`). We will inject the 2D data array there.
+If you need to group data by a category to create multiple series (e.g. to show a legend with colors for each category), you should use ECharts \`dataset.transform\` of type \`filter\` for each unique category.
+CRITICAL: The ECharts filter config syntax MUST be exactly like this:
+{ "transform": { "type": "filter", "config": { "dimension": "ColumnName", "=": "Value" } } }
+Do not use "eq" or "value" objects inside config! Then create a series for each datasetIndex (starting from 1).
+DO NOT hardcode \`xAxis.data\` or \`legend.data\`. ECharts infers them automatically. Set \`xAxis.type: 'category'\` if needed.`;
     } else if (libraryId === 'chartjs') {
       libInstruction = `For the 'config' property, generate a valid Chart.js configuration object with 'data' and 'options' properties.
-IMPORTANT: DO NOT hardcode the actual data arrays. For any data array (like labels or dataset data), you MUST use the exact string placeholder "$col_HEADERNAME" (e.g. "$col_Month" or "$col_Sales"). We will replace these placeholders with the actual data arrays before rendering.`;
+IMPORTANT: DO NOT hardcode the actual data arrays. For any data array (like labels or dataset data), you MUST use the exact string placeholder "$col_HEADERNAME" (e.g. "$col_Month" or "$col_Sales"). We will replace these placeholders with the actual data arrays before rendering.
+NOTE: In Chart.js JSON, you cannot dynamically filter a single dataset into multiple grouped series. If the user asks to group by a category and show a legend, do your best using single datasets or mapping colors if possible, but you cannot create multiple datasets from a long-format table dynamically here.`;
     } else if (libraryId === 'plotly') {
       libInstruction = `For the 'config' property, generate a valid Plotly configuration object with 'data' (array of traces) and 'options' (layout) properties.
-IMPORTANT: DO NOT hardcode the actual data arrays. For any data array (like x or y values in traces), you MUST use the exact string placeholder "$col_HEADERNAME" (e.g. "$col_Month" or "$col_Sales"). We will replace these placeholders with the actual data arrays before rendering.`;
+IMPORTANT: DO NOT hardcode the actual data arrays. For any data array (like x or y values in traces), you MUST use the exact string placeholder "$col_HEADERNAME" (e.g. "$col_Month" or "$col_Sales"). We will replace these placeholders with the actual data arrays before rendering.
+NOTE: In Plotly JSON, you cannot dynamically filter a single dataset into multiple grouped traces. If the user asks to group by a category, do your best using 'color' or 'transforms' if Plotly supports it in JSON, otherwise use a single trace.`;
     }
+
+    let historyContext = '';
+    if (promptHistory && promptHistory.length > 0) {
+      historyContext = `\nPrevious interactions:\n`;
+      const recentHistory = [...promptHistory].slice(0, 3).reverse();
+      recentHistory.forEach((item, index) => {
+        historyContext += `\n--- Interaction ${index + 1} ---\nUser Request: ${item.prompt}\nGenerated Config:\n${item.config}\n`;
+      });
+      historyContext += `\n--- Current Request ---\n`;
+    }
+
+    const uniqueCategoriesStr = uniqueCategories ? JSON.stringify(uniqueCategories, null, 2) : '{}';
 
     const systemInstruction = `
 You are a data visualization expert.
@@ -120,11 +141,15 @@ Your task is to choose the most appropriate chart type and generate a JSON confi
 Supported chart types: 'line', 'bar', 'pie', 'scatter'.
 
 ${libInstruction}
-IMPORTANT: Do not hardcode font colors, text colors, or background colors. Let the charting library handle them automatically so the chart can adapt to light and dark themes.
+IMPORTANT RULES:
+1. Do not hardcode font colors, text colors, or background colors. Let the charting library handle them automatically so the chart can adapt to light and dark themes.
+2. The configuration MUST be completely data-agnostic, relying ONLY on the column headers and the provided unique categories. 
+3. Unique Category Values: If you need to create multiple series based on a categorical column (e.g., to create a legend with distinct colors), you CAN use the exact category values provided in the "Unique Category Values" JSON below. DO NOT guess categories from the sample data, use ONLY the provided Unique Category Values.
 
 Input Data Headers: ${JSON.stringify(headers)}
+Unique Category Values: ${uniqueCategoriesStr}
 Input Data Sample (first 10 rows): ${JSON.stringify(data.slice(0, 10))}
-
+${historyContext}
 User Request: ${prompt}
 
 You MUST return a JSON object with EXACTLY two properties:

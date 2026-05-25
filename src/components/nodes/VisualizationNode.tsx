@@ -17,6 +17,7 @@ export function VisualizationNode({ id }: { id: string }) {
   const prompt = (node?.data?.prompt || '') as string;
   const generatedConfig = (node?.data?.generatedConfig || '') as string;
   const promptHistory = (node?.data?.promptHistory || []) as any[];
+  const enablePromptHistory = (node?.data?.enablePromptHistory ?? false) as boolean;
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [logs, setLogs] = useState<{id: string, text: string, type: 'info'|'error'|'success'}[]>([]);
@@ -61,6 +62,19 @@ export function VisualizationNode({ id }: { id: string }) {
         throw new Error('No input data found. Connect a Data Source or Transform node first.');
       }
 
+      // Extract unique values for categorical columns (up to 20 unique values) to help LLM
+      const uniqueCategories: Record<string, string[]> = {};
+      inputHeaders.forEach((header, colIndex) => {
+        const values = inputData.map(row => row[colIndex]);
+        const isString = values.some(v => typeof v === 'string');
+        if (isString) {
+          const uniques = Array.from(new Set(values)).filter(Boolean).map(String);
+          if (uniques.length <= 20) {
+            uniqueCategories[header] = uniques;
+          }
+        }
+      });
+
       addLog(`Generating chart using ${libraryId}...`, 'info');
       
       const configData = await LLMClient.generateChartConfig(
@@ -68,7 +82,9 @@ export function VisualizationNode({ id }: { id: string }) {
         inputHeaders,
         inputData,
         (prompt as string) || `Create a chart`,
-        (msg: string) => addLog(msg, 'info')
+        (msg: string) => addLog(msg, 'info'),
+        enablePromptHistory ? promptHistory : [],
+        uniqueCategories
       );
       
       let finalConfig: any;
@@ -139,14 +155,14 @@ export function VisualizationNode({ id }: { id: string }) {
       
       if (libraryId === 'echarts') {
         const datasetStr = JSON.stringify([inputHeaders, ...inputData]);
-        configStr = configStr.replace(/"\$dataset"/g, datasetStr);
+        configStr = configStr.replace(/"\$dataset"/g, () => datasetStr);
       } else {
         inputHeaders.forEach((header, index) => {
           const colData = inputData.map(row => row[index]);
           const colDataStr = JSON.stringify(colData);
           const escapedHeader = header.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
           const regex = new RegExp(`"\\$col_${escapedHeader}"`, 'g');
-          configStr = configStr.replace(regex, colDataStr);
+          configStr = configStr.replace(regex, () => colDataStr);
         });
       }
 
@@ -213,12 +229,19 @@ export function VisualizationNode({ id }: { id: string }) {
 
           <div className="flex flex-col gap-1">
             <label className="text-[10px] text-slate-500 dark:text-slate-400 uppercase">Prompt (Optional)</label>
-            <textarea
-              value={prompt}
-              onChange={(e) => updateNodeData(id, { prompt: e.target.value })}
-              placeholder="e.g., Show revenue by month..."
-              className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded p-1.5 text-xs text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600 resize-none h-12 custom-scrollbar"
-            />
+            <div className="relative">
+              <textarea
+                value={prompt}
+                onChange={(e) => updateNodeData(id, { prompt: e.target.value })}
+                placeholder="e.g., Show revenue by month..."
+                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded p-1.5 pb-5 text-xs text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600 resize-y min-h-[48px] custom-scrollbar nodrag"
+              />
+              <div className="absolute bottom-0 right-0 p-1 pointer-events-none text-slate-400/50 dark:text-slate-500/50">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M8 10V8H10V10H8ZM5 10V8H7V10H5ZM8 7V5H10V7H8ZM2 10V8H4V10H2ZM5 7V5H7V7H5ZM8 4V2H10V4H8Z" fill="currentColor"/>
+                </svg>
+              </div>
+            </div>
           </div>
 
           {/* Logs Panel */}
@@ -244,11 +267,20 @@ export function VisualizationNode({ id }: { id: string }) {
             </div>
           )}
 
-          <div className="flex justify-end">
+          <div className="flex items-center justify-between">
+            <label className="flex items-center gap-1.5 text-[10px] text-slate-600 dark:text-slate-300 cursor-pointer nodrag">
+              <input 
+                type="checkbox" 
+                checked={enablePromptHistory}
+                onChange={(e) => updateNodeData(id, { enablePromptHistory: e.target.checked })}
+                className="rounded border-slate-300 dark:border-slate-600 text-emerald-500 focus:ring-emerald-500 bg-white dark:bg-slate-900"
+              />
+              Включить историю промта
+            </label>
             <button
               onClick={handleGenerate}
               disabled={isGenerating}
-              className="flex items-center gap-1 px-2 py-1 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white text-xs rounded transition-colors"
+              className="flex items-center gap-1 px-2 py-1 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 dark:disabled:bg-slate-700 text-white text-xs rounded transition-colors nodrag"
             >
               {isGenerating ? <Loader2 size={12} className="animate-spin" /> : <Settings2 size={12} />}
               Generate Config

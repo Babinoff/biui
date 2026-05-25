@@ -202,17 +202,22 @@ export function PromptEditor({ nodeId }: { nodeId: string }) {
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="e.g., Group by product and calculate total amount..."
-            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded p-2 text-xs text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-blue-500 resize-none h-16 custom-scrollbar nodrag"
+            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded p-2 pb-8 text-xs text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-blue-500 resize-y min-h-[64px] custom-scrollbar nodrag"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
                 handleGenerate();
               }
             }}
           />
+          <div className="absolute bottom-0 right-0 p-1 pointer-events-none text-slate-400/50 dark:text-slate-500/50">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 10V8H10V10H8ZM5 10V8H7V10H5ZM8 7V5H10V7H8ZM2 10V8H4V10H2ZM5 7V5H7V7H5ZM8 4V2H10V4H8Z" fill="currentColor"/>
+            </svg>
+          </div>
           <button
             onClick={handleGenerate}
             disabled={isGenerating || !prompt.trim()}
-            className="absolute bottom-2 right-2 p-1 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-500 text-white rounded transition-colors"
+            className="absolute bottom-2 right-6 p-1 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-500 text-white rounded transition-colors"
             title="Generate (Cmd/Ctrl + Enter)"
           >
             {isGenerating ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
