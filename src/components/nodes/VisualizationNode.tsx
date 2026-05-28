@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { Handle, Position } from '@xyflow/react';
-import { BarChart2, Settings2, Play, Loader2, Terminal, ChevronDown, Code2, History, Copy } from 'lucide-react';
+import { Position } from '@xyflow/react';
+import { BarChart2, Settings2, Play, Loader2, Terminal, ChevronDown, Code2, History } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { LLMClient } from '../../services/llmClient';
+import { BaseNode } from './BaseNode';
 
-export function VisualizationNode({ id }: { id: string }) {
+export function VisualizationNode({ id, selected }: { id: string, selected?: boolean }) {
   const node = useStore(s => s.nodes.find(n => n.id === id));
   const updateNodeData = useStore(s => s.updateNodeData);
-  const duplicateNode = useStore(s => s.duplicateNode);
   const edges = useStore(s => s.edges);
   const nodes = useStore(s => s.nodes);
   const dataSources = useStore(s => s.dataSources);
@@ -213,28 +213,23 @@ export function VisualizationNode({ id }: { id: string }) {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg w-80 flex flex-col">
-      <Handle type="target" position={Position.Left} className="w-5 h-5 bg-emerald-500 border-2 border-white dark:border-slate-800 hover:scale-125 transition-transform cursor-crosshair" />
-      
-      <div className="bg-emerald-50 dark:bg-emerald-900/50 p-2 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-2">
-          <BarChart2 size={14} className="text-emerald-500 dark:text-emerald-400" />
-          <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">Visualization</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={() => duplicateNode(id)}
-            className="text-slate-400 hover:text-emerald-500 dark:text-slate-500 dark:hover:text-emerald-400 transition-colors"
-            title="Duplicate Node"
-          >
-            <Copy size={12} />
-          </button>
-          <button onClick={() => setShowConfig(!showConfig)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-            <Settings2 size={14} />
-          </button>
-        </div>
-      </div>
-
+    <BaseNode
+      id={id}
+      title="Visualization"
+      icon={<BarChart2 size={14} />}
+      color="emerald"
+      selected={selected}
+      className="w-80"
+      handles={[
+        { type: 'target', position: Position.Left },
+        { type: 'source', position: Position.Right }
+      ]}
+      headerActions={
+        <button onClick={() => setShowConfig(!showConfig)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <Settings2 size={14} />
+        </button>
+      }
+    >
       {showConfig && (
         <div className="p-3 border-b border-slate-200 dark:border-slate-700 flex flex-col gap-3 nodrag cursor-default shrink-0">
           <div className="flex gap-2">
@@ -379,8 +374,6 @@ export function VisualizationNode({ id }: { id: string }) {
           </div>
         </div>
       )}
-
-      <Handle type="source" position={Position.Right} className="w-5 h-5 bg-emerald-500 border-2 border-white dark:border-slate-800 hover:scale-125 transition-transform cursor-crosshair" />
-    </div>
+    </BaseNode>
   );
 }
