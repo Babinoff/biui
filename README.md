@@ -2,7 +2,7 @@
   <img src="ico.png" alt="BIUI Logo" width="200" />
 </p>
 
-# BIUI - Automated Business Intelligence Tool
+# BI(AI)UI - Automated Business Intelligence Tool
 
 **BIUI** — это современное приложение для автоматизированного создания бизнес-аналитики с использованием визуального нодового интерфейса и возможностей искусственного интеллекта (Gemini, Mistral, OpenAI, Claude). 
 
