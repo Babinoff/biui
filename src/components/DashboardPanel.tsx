@@ -112,7 +112,7 @@ export function DashboardPanel() {
                   }}
                   className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded transition-colors"
                 >
-                  + Add Text
+                  +Text
                 </button>
               )}
               <button
